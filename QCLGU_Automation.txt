@@ -61,7 +61,13 @@ do {
     $currentHostName = $env:COMPUTERNAME
     $currentUserName = $env:USERNAME
 
-    # --- System Status Header: Hostname & Processes ---
+    # --- Fetch Active MAC Address(es) ---
+    $activeMacs = (Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -ExpandProperty MacAddress) -join ', '
+    if ([string]::IsNullOrWhiteSpace($activeMacs)) {
+        $activeMacs = "Disconnected / Not Found"
+    }
+
+    # --- System Status Header: Hostname, MAC & Processes ---
     $tmProcesses = Get-Process | Where-Object { $_.ProcessName -match '(?i)TmListen|ntrtscan|TMBMSRV|TmCCSF|pccNTMon|ds_agent|coreServiceShell|uiWatchDog|Trend' } -ErrorAction SilentlyContinue
     $csProcesses = Get-Process | Where-Object { $_.ProcessName -match '(?i)CSFalconService|csagent|falcon|CSConfigService' } -ErrorAction SilentlyContinue
 
@@ -76,6 +82,7 @@ do {
     Write-Host "===============================================" -ForegroundColor Gray
     Write-Host " Hostname    : " -NoNewline; Write-Host $currentHostName -ForegroundColor White
     Write-Host " User Name   : " -NoNewline; Write-Host $currentUserName -ForegroundColor White
+    Write-Host " MAC Address : " -NoNewline; Write-Host $activeMacs -ForegroundColor White
     Write-Host " Trend Micro : " -NoNewline; Write-Host $tmStatus -ForegroundColor $tmColor
     Write-Host " CrowdStrike : " -NoNewline; Write-Host $csStatus -ForegroundColor $csColor
     Write-Host "===============================================" -ForegroundColor Gray
