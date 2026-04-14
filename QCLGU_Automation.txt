@@ -361,10 +361,30 @@ if ($selectedParts -contains 3) {
 # PART 4: Trend Micro Custom Uninstaller (Web Download)
 if ($selectedParts -contains 4) {
     Write-Host "`n--- Trend Micro Uninstaller Section ---" -ForegroundColor Cyan
-    $tmGithubAssetUrl = "https://github.com/Justine25-debug/QCLGU/releases/download/v1.0/TM.Uninstall.-.April.08.2026.zip"
     $tmZipPath = Join-Path $baseDir "TM_Uninstaller.zip"
     $tmExtractPath = Join-Path $baseDir "TMUNINSTALL"
     $tmExeName = "V1ESUninstallTool.exe"
+
+    # --- Fetch Latest Release via GitHub API ---
+    $repoApiUrl = "https://api.github.com/repos/Justine25-debug/QCLGU/releases/latest"
+    $tmManualUrl = "https://github.com/Justine25-debug/QCLGU/releases/latest"
+    $tmGithubAssetUrl = $null
+
+    try {
+        Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Yellow
+        $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
+        $tmAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)TM.*Uninstall.*\.zip" } | Select-Object -First 1
+        if ($tmAsset) {
+            $tmGithubAssetUrl = $tmAsset.browser_download_url
+            $tmManualUrl = $latestRelease.html_url
+            Write-Host "Found latest TM Uninstaller: $($tmAsset.name)" -ForegroundColor Green
+        } else {
+            Write-Warning "Could not find a Trend Micro ZIP in the latest release assets."
+        }
+    } catch {
+        Write-Warning "Failed to query GitHub API for latest release. Will attempt manual fallback."
+    }
+    # -------------------------------------------
     
     try {
         $tmTargetExeInfo = Get-ChildItem -Path $tmExtractPath -Filter $tmExeName -Recurse | Select-Object -First 1
@@ -395,13 +415,15 @@ if ($selectedParts -contains 4) {
             }
 
             if (-not $isZip) {
-                Invoke-WebRequest -Uri $tmGithubAssetUrl -OutFile $tmZipPath -UseBasicParsing -TimeoutSec 300 -Headers @{ "User-Agent" = "Mozilla/5.0" } -ErrorAction Stop
-                $isZip = Test-ZipFile -Path $tmZipPath
+                if ($tmGithubAssetUrl) {
+                    Invoke-WebRequest -Uri $tmGithubAssetUrl -OutFile $tmZipPath -UseBasicParsing -TimeoutSec 300 -Headers @{ "User-Agent" = "Mozilla/5.0" } -ErrorAction Stop
+                    $isZip = Test-ZipFile -Path $tmZipPath
+                }
             }
 
             if (-not $isZip) {
                 Write-Warning "Direct GitHub request did not return a ZIP. Opening browser for manual download from release page."
-                Start-Process "https://github.com/Justine25-debug/QCLGU/releases/tag/v1.0"
+                Start-Process $tmManualUrl
                 Read-Host "Download the Trend Micro ZIP from the opened page, then press Enter to continue"
 
                 $downloadedTmZip = Get-ChildItem -Path $baseDir -Filter "*TM*Uninstall*.zip" -File -ErrorAction SilentlyContinue |
@@ -485,11 +507,31 @@ if ($selectedParts -contains 4) {
 # PART 5: CrowdStrike Falcon Installer (Web Download)
 if ($selectedParts -contains 5) {
     Write-Host "`n--- CrowdStrike Falcon Installer Section ---" -ForegroundColor Cyan
-    $csGithubAssetUrl = "https://github.com/Justine25-debug/QCLGU/releases/download/v1.0/CS.Falcon.zip"
     $csZipPath = Join-Path $baseDir "CS_Installer.zip"
     $csExtractPath = Join-Path $baseDir "CSFalcon"
     $csExeName = "QCLGU-CS-installer.exe"
     
+    # --- Fetch Latest Release via GitHub API ---
+    $repoApiUrl = "https://api.github.com/repos/Justine25-debug/QCLGU/releases/latest"
+    $csManualUrl = "https://github.com/Justine25-debug/QCLGU/releases/latest"
+    $csGithubAssetUrl = $null
+
+    try {
+        Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Yellow
+        $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
+        $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)CS.*Falcon.*\.zip" } | Select-Object -First 1
+        if ($csAsset) {
+            $csGithubAssetUrl = $csAsset.browser_download_url
+            $csManualUrl = $latestRelease.html_url
+            Write-Host "Found latest CrowdStrike Installer: $($csAsset.name)" -ForegroundColor Green
+        } else {
+            Write-Warning "Could not find a CrowdStrike ZIP in the latest release assets."
+        }
+    } catch {
+        Write-Warning "Failed to query GitHub API for latest release. Will attempt manual fallback."
+    }
+    # -------------------------------------------
+
     try {
         $csTargetExeInfo = Get-ChildItem -Path $csExtractPath -Filter $csExeName -Recurse | Select-Object -First 1
 
@@ -519,13 +561,15 @@ if ($selectedParts -contains 5) {
             }
 
             if (-not $isZip) {
-                Invoke-WebRequest -Uri $csGithubAssetUrl -OutFile $csZipPath -UseBasicParsing -TimeoutSec 180 -Headers @{ "User-Agent" = "Mozilla/5.0" } -ErrorAction Stop
-                $isZip = Test-ZipFile -Path $csZipPath
+                if ($csGithubAssetUrl) {
+                    Invoke-WebRequest -Uri $csGithubAssetUrl -OutFile $csZipPath -UseBasicParsing -TimeoutSec 180 -Headers @{ "User-Agent" = "Mozilla/5.0" } -ErrorAction Stop
+                    $isZip = Test-ZipFile -Path $csZipPath
+                }
             }
 
             if (-not $isZip) {
                 Write-Warning "Direct GitHub request did not return a ZIP. Opening browser for manual download from release page."
-                Start-Process "https://github.com/Justine25-debug/QCLGU/releases/tag/v1.0"
+                Start-Process $csManualUrl
                 Read-Host "Download the CrowdStrike ZIP from the opened page, then press Enter to continue"
 
                 $downloadedCsZip = Get-ChildItem -Path $baseDir -Filter "*CS*Falcon*.zip" -File -ErrorAction SilentlyContinue |
