@@ -467,7 +467,7 @@ if ($selectedParts -contains 5) {
         # Updated asset search to match: FalconSensor_Windows.zip
         $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^FalconSensor.*\.zip$" } | Select-Object -First 1
         if ($csAsset) { $csGithubAssetUrl = $csAsset.browser_download_url }
-        $csCidAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^(cid|customer[_-]id|crowdstrike[_-]customer[_-]id)\.txt$" } | Select-Object -First 1
+        $csCidAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^(cid|customer[ _-]id|crowdstrike[ _-]customer[ _-]id)\.txt$" } | Select-Object -First 1
         if ($csCidAsset) {
             $csCidGithubAssetUrl = $csCidAsset.browser_download_url
             $csCidAssetName = $csCidAsset.name
@@ -495,6 +495,16 @@ if ($selectedParts -contains 5) {
                         if ($attempt -lt $maxCidDownloadAttempts) { Start-Sleep -Seconds $cidRetryDelaySeconds }
                         else { Write-Warning "Failed to download CrowdStrike customer ID file '$csCidAssetName' from ${csCidGithubAssetUrl}: $($_.Exception.Message)" }
                     }
+                }
+            }
+
+            if (Test-Path -LiteralPath $csCidPath) {
+                $csCidText = (Get-Content -LiteralPath $csCidPath -Raw -ErrorAction SilentlyContinue).Trim()
+                if ($csCidText) {
+                    Write-Host "CrowdStrike Customer ID:" -ForegroundColor Cyan
+                    Write-Host $csCidText -ForegroundColor Green
+                } else {
+                    Write-Warning "CrowdStrike customer ID file '$csCidAssetName' is empty."
                 }
             }
         }
