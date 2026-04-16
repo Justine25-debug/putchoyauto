@@ -458,7 +458,6 @@ if ($selectedParts -contains 5) {
     # Updated Repo and API links
     $repoApiUrl = "https://api.github.com/repos/Justine25-debug/putchoyauto/releases/latest"
     $csGithubAssetUrl = $null
-    $csCidFileName = "CrowdstrikeCustomerID.txt"
     $csCidUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/main/CrowdstrikeCustomerID.txt"
     try {
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
@@ -475,7 +474,7 @@ if ($selectedParts -contains 5) {
                 Write-Host "CrowdStrike Customer ID file content (remote):" -ForegroundColor Cyan
                 Write-Host $csCidText -ForegroundColor Green
             } else {
-                Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty at remote source."
+                Write-Warning "CrowdStrike customer ID content is empty at remote source: $csCidUrl"
             }
         } catch {
             Write-Warning "Failed to retrieve CrowdStrike customer ID file from remote source: $($_.Exception.Message)"
