@@ -461,8 +461,7 @@ if ($selectedParts -contains 5) {
     $csGithubAssetUrl = $null
     $csCidFileName = "CrowdstrikeCustomerID.txt"
     $csCidPath = Join-Path $baseDir $csCidFileName
-    $csCidSourceBranch = "main"
-    $csCidRawUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/refs/heads/$csCidSourceBranch/$csCidFileName"
+    $csCidSourceRef = "main"
 
     try {
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
@@ -470,8 +469,7 @@ if ($selectedParts -contains 5) {
         $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^FalconSensor.*\.zip$" } | Select-Object -First 1
         if ($csAsset) { $csGithubAssetUrl = $csAsset.browser_download_url }
         if ($latestRelease.target_commitish) {
-            $csCidSourceBranch = $latestRelease.target_commitish
-            $csCidRawUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/refs/heads/$csCidSourceBranch/$csCidFileName"
+            $csCidSourceRef = $latestRelease.target_commitish
         }
     } catch { }
 
@@ -486,14 +484,24 @@ if ($selectedParts -contains 5) {
             $maxCidDownloadAttempts = 2
             $cidRetryDelaySeconds = 2
             $csCidDownloaded = $false
-            for ($attempt = 1; $attempt -le $maxCidDownloadAttempts -and -not $csCidDownloaded; $attempt++) {
-                try {
-                    Invoke-WebRequest -Uri $csCidRawUrl -OutFile $csCidPath -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-                    $csCidDownloaded = $true
-                } catch {
-                    if ($attempt -lt $maxCidDownloadAttempts) { Start-Sleep -Seconds $cidRetryDelaySeconds }
-                    else { Write-Warning "Failed to download CrowdStrike customer ID file '$csCidFileName' from repository (${csCidRawUrl}): $($_.Exception.Message)" }
+            $csCidRefCandidates = @($csCidSourceRef, "main", "master") | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+            $lastCsCidError = $null
+            foreach ($csCidRef in $csCidRefCandidates) {
+                if ($csCidDownloaded) { break }
+                $csCidRawUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/$csCidRef/$csCidFileName"
+                for ($attempt = 1; $attempt -le $maxCidDownloadAttempts -and -not $csCidDownloaded; $attempt++) {
+                    try {
+                        Invoke-WebRequest -Uri $csCidRawUrl -OutFile $csCidPath -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+                        $csCidDownloaded = $true
+                    } catch {
+                        $lastCsCidError = $_.Exception.Message
+                        if ($attempt -lt $maxCidDownloadAttempts) { Start-Sleep -Seconds $cidRetryDelaySeconds }
+                    }
                 }
+            }
+            if (-not $csCidDownloaded) {
+                Write-Warning "Failed to download CrowdStrike customer ID file '$csCidFileName' from repository. Last error: $lastCsCidError"
+                Write-Warning "Please ensure '$csCidFileName' exists in this repository and contains the correct customer ID."
             }
         }
 
