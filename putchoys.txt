@@ -484,7 +484,10 @@ if ($selectedParts -contains 5) {
             $maxCidDownloadAttempts = 2
             $cidRetryDelaySeconds = 2
             $csCidDownloaded = $false
-            $csCidRefCandidates = @($csCidSourceRef, "main", "master") | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
+            $csCidRefCandidates = @($csCidSourceRef)
+            if ($csCidSourceRef -ne "main") { $csCidRefCandidates += "main" }
+            if ($csCidSourceRef -ne "master") { $csCidRefCandidates += "master" }
+            $csCidRefCandidates = $csCidRefCandidates | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique
             $lastCsCidError = $null
             foreach ($csCidRef in $csCidRefCandidates) {
                 if ($csCidDownloaded) { break }
@@ -500,7 +503,7 @@ if ($selectedParts -contains 5) {
                 }
             }
             if (-not $csCidDownloaded) {
-                Write-Warning "Failed to download CrowdStrike customer ID file '$csCidFileName' from repository. Last error: $lastCsCidError"
+                Write-Warning "Failed to download CrowdStrike customer ID file '$csCidFileName' from repository. Attempted refs: $($csCidRefCandidates -join ', '). Last error: $lastCsCidError"
                 Write-Warning "Please ensure '$csCidFileName' exists in this repository and contains the correct customer ID."
             }
         }
