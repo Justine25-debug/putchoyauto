@@ -468,14 +468,18 @@ if ($selectedParts -contains 5) {
     } catch { }
 
     try {
-        Write-Host "Retrieving CrowdStrike customer ID file content from remote source..." -ForegroundColor Yellow
-        $csCidResponse = Invoke-WebRequest -Uri $csCidUrl -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
-        $csCidText = ($csCidResponse.Content | Out-String).Trim()
-        if ($csCidText) {
-            Write-Host "CrowdStrike Customer ID file content (remote):" -ForegroundColor Cyan
-            Write-Host $csCidText -ForegroundColor Green
-        } else {
-            Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty at remote source."
+        try {
+            Write-Host "Retrieving CrowdStrike customer ID file content from remote source..." -ForegroundColor Yellow
+            $csCidResponse = Invoke-WebRequest -Uri $csCidUrl -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
+            $csCidText = $csCidResponse.Content.Trim()
+            if ($csCidText) {
+                Write-Host "CrowdStrike Customer ID file content (remote):" -ForegroundColor Cyan
+                Write-Host $csCidText -ForegroundColor Green
+            } else {
+                Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty at remote source."
+            }
+        } catch {
+            Write-Warning "Failed to retrieve CrowdStrike customer ID file from remote source: $($_.Exception.Message)"
         }
 
         # Check if already extracted
