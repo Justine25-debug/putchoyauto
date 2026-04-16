@@ -459,53 +459,35 @@ if ($selectedParts -contains 5) {
     $repoApiUrl = "https://api.github.com/repos/Justine25-debug/putchoyauto/releases/latest"
     $csManualUrl = "https://github.com/Justine25-debug/putchoyauto/releases/latest"
     $csGithubAssetUrl = $null
-    $csCidGithubAssetUrl = $null
-    $csCidAssetName = $null
+    $csCidFileName = "CrowdstrikeCustomerID.txt"
+    $csCidPath = Join-Path $baseDir $csCidFileName
+    $csCidRawUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/refs/heads/main/CrowdstrikeCustomerID.txt"
 
     try {
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
         # Updated asset search to match: FalconSensor_Windows.zip
         $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^FalconSensor.*\.zip$" } | Select-Object -First 1
         if ($csAsset) { $csGithubAssetUrl = $csAsset.browser_download_url }
-        $csCidAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^(cid|customer[ _-]id|crowdstrike[ _-]customer[ _-]id)\.txt$" } | Select-Object -First 1
-        if ($csCidAsset) {
-            $csCidGithubAssetUrl = $csCidAsset.browser_download_url
-            $csCidAssetName = $csCidAsset.name
-        }
     } catch { }
 
     try {
-        if ($csCidGithubAssetUrl -and $csCidAssetName) {
-            $csCidPath = Join-Path $baseDir $csCidAssetName
-            $csCidNeedsDownload = $true
-            if (Test-Path -LiteralPath $csCidPath) {
-                $csCidFileInfo = Get-Item -LiteralPath $csCidPath -ErrorAction SilentlyContinue
-                if ($csCidFileInfo -and $csCidFileInfo.Length -gt 0) { $csCidNeedsDownload = $false }
-            }
-            if ($csCidNeedsDownload) {
-                Write-Host "Downloading CrowdStrike customer ID file..." -ForegroundColor Magenta
-                $maxCidDownloadAttempts = 2
-                $cidRetryDelaySeconds = 2
-                $csCidDownloaded = $false
-                for ($attempt = 1; $attempt -le $maxCidDownloadAttempts -and -not $csCidDownloaded; $attempt++) {
-                    try {
-                        Invoke-WebRequest -Uri $csCidGithubAssetUrl -OutFile $csCidPath -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
-                        $csCidDownloaded = $true
-                    } catch {
-                        if ($attempt -lt $maxCidDownloadAttempts) { Start-Sleep -Seconds $cidRetryDelaySeconds }
-                        else { Write-Warning "Failed to download CrowdStrike customer ID file '$csCidAssetName' from ${csCidGithubAssetUrl}: $($_.Exception.Message)" }
-                    }
-                }
-            }
+        $csCidNeedsDownload = $true
+        if (Test-Path -LiteralPath $csCidPath) {
+            $csCidFileInfo = Get-Item -LiteralPath $csCidPath -ErrorAction SilentlyContinue
+            if ($csCidFileInfo -and $csCidFileInfo.Length -gt 0) { $csCidNeedsDownload = $false }
+        }
+        if ($csCidNeedsDownload) {
+            Write-Host "Downloading CrowdStrike customer ID file from repository..." -ForegroundColor Magenta
+            Invoke-WebRequest -Uri $csCidRawUrl -OutFile $csCidPath -UseBasicParsing -TimeoutSec 10 -ErrorAction Stop
+        }
 
-            if (Test-Path -LiteralPath $csCidPath) {
-                $csCidText = (Get-Content -LiteralPath $csCidPath -Raw -ErrorAction SilentlyContinue).Trim()
-                if ($csCidText) {
-                    Write-Host "CrowdStrike Customer ID:" -ForegroundColor Cyan
-                    Write-Host $csCidText -ForegroundColor Green
-                } else {
-                    Write-Warning "CrowdStrike customer ID file '$csCidAssetName' is empty."
-                }
+        if (Test-Path -LiteralPath $csCidPath) {
+            $csCidText = (Get-Content -LiteralPath $csCidPath -Raw -ErrorAction SilentlyContinue).Trim()
+            if ($csCidText) {
+                Write-Host "CrowdStrike Customer ID:" -ForegroundColor Cyan
+                Write-Host $csCidText -ForegroundColor Green
+            } else {
+                Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty."
             }
         }
 
