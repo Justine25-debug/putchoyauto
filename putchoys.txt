@@ -477,7 +477,7 @@ if ($selectedParts -contains 5) {
                 Write-Warning "CrowdStrike customer ID content is empty at remote source: $csCidUrl"
             }
         } catch {
-            Write-Warning "Failed to retrieve CrowdStrike customer ID file from remote source: $($_.Exception.Message)"
+            Write-Warning "Failed to retrieve CrowdStrike customer ID file from remote source ($csCidUrl): $($_.Exception.Message)"
         }
 
         # Check if already extracted
