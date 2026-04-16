@@ -19,9 +19,9 @@ if %errorLevel% NEQ 0 (
 echo [INFO] Launching script engine...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-Expression (Get-Content '%~f0' -Raw)"
 
-[span_0](start_span):: 3. Keep the CMD window open after the script finishes[span_0](end_span)
+:: 3. Keep the CMD window open after the script finishes
 echo.
-[span_1](start_span)pause[span_1](end_span)
+pause
 exit /b
 #>
 
@@ -43,7 +43,7 @@ function Test-ZipFile {
         $fs = [System.IO.File]::OpenRead($Path)
         $buffer = New-Object byte[] 2
        
-        [span_2](start_span)[void]$fs.Read($buffer, 0, 2)[span_2](end_span)
+        [void]$fs.Read($buffer, 0, 2)
         $hexString = [System.BitConverter]::ToString($buffer)
         return ($hexString -eq "50-4B")
     } catch {
@@ -62,18 +62,18 @@ do {
     $currentHostName = $env:COMPUTERNAME
     $currentUserName = $env:USERNAME
 
-    # -[span_3](start_span)-- Fetch Active MAC Address(es) ---[span_3](end_span)
+    # --- Fetch Active MAC Address(es) ---
     $activeMacs = (Get-NetAdapter -ErrorAction SilentlyContinue |
-        [span_4](start_span)Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -ExpandProperty MacAddress) -join ', '[span_4](end_span)
+        Where-Object { $_.Status -eq 'Up' -and $_.MacAddress } | Select-Object -ExpandProperty MacAddress) -join ', '
     if ([string]::IsNullOrWhiteSpace($activeMacs)) {
         $activeMacs = "Disconnected / Not Found"
     }
 
     # --- System Status Header: Hostname, MAC & Processes ---
     $tmProcesses = Get-Process |
-        [span_5](start_span)Where-Object { $_.ProcessName -match '(?i)TmListen|ntrtscan|TMBMSRV|TmCCSF|pccNTMon|ds_agent|coreServiceShell|uiWatchDog|Trend' } -ErrorAction SilentlyContinue[span_5](end_span)
+        Where-Object { $_.ProcessName -match '(?i)TmListen|ntrtscan|TMBMSRV|TmCCSF|pccNTMon|ds_agent|coreServiceShell|uiWatchDog|Trend' } -ErrorAction SilentlyContinue
     $csProcesses = Get-Process |
-        [span_6](start_span)Where-Object { $_.ProcessName -match '(?i)CSFalconService|csagent|falcon|CSConfigService' } -ErrorAction SilentlyContinue[span_6](end_span)
+        Where-Object { $_.ProcessName -match '(?i)CSFalconService|csagent|falcon|CSConfigService' } -ErrorAction SilentlyContinue
 
     $tmStatus = if ($tmProcesses) { "DETECTED (Running)" } else { "Not Detected" }
     $csStatus = if ($csProcesses) { "DETECTED (Running)" } else { "Not Detected" }
@@ -84,11 +84,11 @@ do {
     Write-Host "`n===============================================" -ForegroundColor Gray
     Write-Host " SYSTEM STATUS HEADER" -ForegroundColor Cyan
     Write-Host "===============================================" -ForegroundColor Gray
-    Write-Host " Hostname    : " -NoNewline; [span_7](start_span)Write-Host $currentHostName -ForegroundColor White[span_7](end_span)
-    Write-Host " User Name   : " -NoNewline; [span_8](start_span)Write-Host $currentUserName -ForegroundColor White[span_8](end_span)
-    Write-Host " MAC Address : " -NoNewline; [span_9](start_span)Write-Host $activeMacs -ForegroundColor White[span_9](end_span)
-    Write-Host " Trend Micro : " -NoNewline; [span_10](start_span)Write-Host $tmStatus -ForegroundColor $tmColor[span_10](end_span)
-    Write-Host " CrowdStrike : " -NoNewline; [span_11](start_span)Write-Host $csStatus -ForegroundColor $csColor[span_11](end_span)
+    Write-Host " Hostname    : " -NoNewline; Write-Host $currentHostName -ForegroundColor White
+    Write-Host " User Name   : " -NoNewline; Write-Host $currentUserName -ForegroundColor White
+    Write-Host " MAC Address : " -NoNewline; Write-Host $activeMacs -ForegroundColor White
+    Write-Host " Trend Micro : " -NoNewline; Write-Host $tmStatus -ForegroundColor $tmColor
+    Write-Host " CrowdStrike : " -NoNewline; Write-Host $csStatus -ForegroundColor $csColor
     Write-Host "===============================================" -ForegroundColor Gray
 
     Write-Host "`n--- Task Selection ---" -ForegroundColor Cyan
@@ -102,7 +102,7 @@ do {
     Write-Host "[A] Run All"
     Write-Host "[Q] Quit"
 
-    [span_12](start_span)$selectionInput = Read-Host "Select task numbers (comma-separated), A for all, or Q to quit"[span_12](end_span)
+    $selectionInput = Read-Host "Select task numbers (comma-separated), A for all, or Q to quit"
     if ($selectionInput -match '^[Qq]$') { break }
 
     $selectedParts = @()
@@ -111,14 +111,14 @@ do {
         $selectedParts = 1..7
     } else {
         $selectedParts = $selectionInput -split ',' |
-            [span_13](start_span)ForEach-Object { $_.Trim() } |[span_13](end_span)
+            ForEach-Object { $_.Trim() } |
             Where-Object { $_ -match '^[1-7]$' } |
             ForEach-Object { [int]$_ } |
-            [span_14](start_span)Select-Object -Unique[span_14](end_span)
+            Select-Object -Unique
     }
 
     if (-not $selectedParts -or $selectedParts.Count -eq 0) {
-        Write-Host "No valid tasks selected. Please try again." -[span_15](start_span)ForegroundColor Yellow[span_15](end_span)
+        Write-Host "No valid tasks selected. Please try again." -ForegroundColor Yellow
         continue
     }
 
@@ -133,18 +133,18 @@ if ($selectedParts -contains 1) {
 
     if (![string]::IsNullOrWhiteSpace($newHostName)) {
         if ($newHostName -eq $currentHostName) {
-            Write-Host "New hostname is the same as current. Skipping rename." -[span_16](start_span)ForegroundColor Yellow[span_16](end_span)
+            Write-Host "New hostname is the same as current. Skipping rename." -ForegroundColor Yellow
         } else {
             try {
                 Rename-Computer -NewName $newHostName -Force -ErrorAction Stop
                 Write-Host "Hostname successfully changed to: $newHostName" -ForegroundColor Green
-                Write-Host "NOTE: A reboot is required for the name change to fully take effect." -[span_17](start_span)ForegroundColor Magenta[span_17](end_span)
+                Write-Host "NOTE: A reboot is required for the name change to fully take effect." -ForegroundColor Magenta
             } catch {
                 Write-Error "Failed to change hostname: $($_.Exception.Message)"
             }
         }
     } else {
-        Write-Host "Skipping hostname change." -[span_18](start_span)ForegroundColor Yellow[span_18](end_span)
+        Write-Host "Skipping hostname change." -ForegroundColor Yellow
     }
 }
 
@@ -159,8 +159,8 @@ if ($selectedParts -contains 2) {
         Write-Host "Downloading latest uninstall blocklist from remote source..." -ForegroundColor Yellow
         $blocklistResponse = Invoke-WebRequest -Uri $blocklistUrl -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
         $blockKeywords = ($blocklistResponse.Content -split "`r?`n") |
-            [span_19](start_span)Where-Object { $_.Trim() -ne "" }[span_19](end_span)
-        Write-Host "Loaded $($blockKeywords.Count) blocklist entries from remote source." -[span_20](start_span)ForegroundColor Green[span_20](end_span)
+            Where-Object { $_.Trim() -ne "" }
+        Write-Host "Loaded $($blockKeywords.Count) blocklist entries from remote source." -ForegroundColor Green
     } catch {
         Write-Warning "Could not download remote blocklist. Continuing with an empty blocklist."
     }
@@ -172,19 +172,19 @@ if ($selectedParts -contains 2) {
     )
 
     $allApps = Get-ItemProperty $registryPaths -ErrorAction SilentlyContinue |
-        [span_21](start_span)Where-Object { $_.DisplayName -and $_.UninstallString } |[span_21](end_span)
+        Where-Object { $_.DisplayName -and $_.UninstallString } |
         Select-Object DisplayName, DisplayVersion, Publisher, UninstallString |
-        [span_22](start_span)Sort-Object DisplayName -Unique[span_22](end_span)
+        Sort-Object DisplayName -Unique
 
     if ($allApps.Count -eq 0) {
-        Write-Host "No applications found on this system." -[span_23](start_span)ForegroundColor Yellow[span_23](end_span)
+        Write-Host "No applications found on this system." -ForegroundColor Yellow
     } else {
         $flaggedApps = @()
         foreach ($app in $allApps) {
             foreach ($keyword in $blockKeywords) {
                 if ($app.DisplayName -match [regex]::Escape($keyword.Trim())) {
                     $flaggedApps += $app
-                    [span_24](start_span)break[span_24](end_span)
+                    break
                 }
             }
         }
@@ -193,109 +193,109 @@ if ($selectedParts -contains 2) {
             while ($true) {
                 Write-Host "`n--- $listName ---`n" -ForegroundColor Green
 
-                [span_25](start_span)if ($listName -eq "All Installed Applications") {[span_25](end_span)
+                if ($listName -eq "All Installed Applications") {
                     $columns = 3
                     $indexWidth = (("[{0}]" -f $appList.Count).Length + 1)
                     $maxNameWidth = ($appList | ForEach-Object { $_.DisplayName.Length } | Measure-Object -Maximum).Maximum
-                    [span_26](start_span)$nameWidth = [Math]::Min([Math]::Max($maxNameWidth, 20), 34)[span_26](end_span)
+                    $nameWidth = [Math]::Min([Math]::Max($maxNameWidth, 20), 34)
                     $columnWidth = $indexWidth + $nameWidth + 3
                     $rows = [Math]::Ceiling($appList.Count / [double]$columns)
 
-                    [span_27](start_span)for ($row = 0; $row -lt $rows; $row++) {[span_27](end_span)
+                    for ($row = 0; $row -lt $rows; $row++) {
                         $line = ""
                         for ($col = 0; $col -lt $columns; $col++) {
                             $idx = $row + ($col * $rows) + 1
-                            [span_28](start_span)if ($idx -le $appList.Count) {[span_28](end_span)
+                            if ($idx -le $appList.Count) {
                                 $number = ("[{0}]" -f $idx).PadRight($indexWidth)
-                                [span_29](start_span)$name = $appList[$idx - 1].DisplayName[span_29](end_span)
+                                $name = $appList[$idx - 1].DisplayName
                                 if ($name.Length -gt $nameWidth) {
                                     $name = $name.Substring(0, $nameWidth - 3) + "..."
-                                [span_30](start_span)}
+                                }
                                 $entry = "$number $name"
                                 $line += $entry.PadRight($columnWidth)
-                            }[span_30](end_span)
+                            }
                         }
                         Write-Host $line
                     }
                 } else {
-                    [span_31](start_span)$i = 1[span_31](end_span)
+                    $i = 1
                     foreach ($app in $appList) {
                         $number = "{0,-4}" -f "[$i]"
                         Write-Host "$number $($app.DisplayName) (Version: $($app.DisplayVersion))"
-                        [span_32](start_span)$i++[span_32](end_span)
+                        $i++
                     }
                 }
 
                 Write-Host ""
                 $allowSelectAll = ($listName -ne "All Installed Applications")
-                [span_33](start_span)if ($allowSelectAll) {[span_33](end_span)
+                if ($allowSelectAll) {
                     $selection = Read-Host "Enter a number, comma-separated numbers (e.g., 1,2,3), 'A' for all, or press Enter to skip"
                 } else {
-                    [span_34](start_span)$selection = Read-Host "Enter a number, comma-separated numbers (e.g., 1,2,3), or press Enter to skip"[span_34](end_span)
+                    $selection = Read-Host "Enter a number, comma-separated numbers (e.g., 1,2,3), or press Enter to skip"
                 }
 
                 if ([string]::IsNullOrWhiteSpace($selection)) { break }
 
                 if ($allowSelectAll -and $selection -match '^[Aa]$') {
-                    [span_35](start_span)$confirmAll = Read-Host "Are you sure you want to uninstall ALL listed apps? (Y/N)"[span_35](end_span)
+                    $confirmAll = Read-Host "Are you sure you want to uninstall ALL listed apps? (Y/N)"
                     if ($confirmAll -match '^[Yy]$') {
                         foreach ($targetApp in $appList) {
                             Write-Host "`nUninstalling: $($targetApp.DisplayName)" -ForegroundColor Magenta
-                            [span_36](start_span)$uninstallString = $targetApp.UninstallString[span_36](end_span)
+                            $uninstallString = $targetApp.UninstallString
                             Write-Host "Executing: $uninstallString" -ForegroundColor Cyan
                             try {
-                                [span_37](start_span)Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$uninstallString`"" -Wait -NoNewWindow[span_37](end_span)
+                                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$uninstallString`"" -Wait -NoNewWindow
                                 Write-Host "Finished." -ForegroundColor Green
                             } catch {
-                                [span_38](start_span)Write-Error "Failed to launch uninstaller for $($targetApp.DisplayName)."[span_38](end_span)
+                                Write-Error "Failed to launch uninstaller for $($targetApp.DisplayName)."
                             }
                         }
                         break 
-                    [span_39](start_span)} else {[span_39](end_span)
+                    } else {
                         Write-Host "Bulk uninstallation cancelled." -ForegroundColor Yellow
                     }
                 }
-                [span_40](start_span)elseif ($selection -match '^[\d\s,]+$') {[span_40](end_span)
+                elseif ($selection -match '^[\d\s,]+$') {
                     $selectedIndexes = $selection -split ',' |
-                        [span_41](start_span)ForEach-Object { $_.Trim() } |[span_41](end_span)
+                        ForEach-Object { $_.Trim() } |
                         Where-Object { $_ -match '^\d+$' -and [int]$_ -ge 1 -and [int]$_ -le $appList.Count } |
-                        [span_42](start_span)Select-Object -Unique[span_42](end_span)
+                        Select-Object -Unique
 
                     if ($selectedIndexes.Count -eq 0) {
-                        [span_43](start_span)Write-Warning "No valid application numbers selected. Please try again."[span_43](end_span)
+                        Write-Warning "No valid application numbers selected. Please try again."
                         continue
                     }
 
-                    Write-Host "`nYou selected $($selectedIndexes.Count) application(s) for removal." -[span_44](start_span)ForegroundColor Magenta[span_44](end_span)
+                    Write-Host "`nYou selected $($selectedIndexes.Count) application(s) for removal." -ForegroundColor Magenta
                     $confirm = Read-Host "Are you sure you want to uninstall the selected app(s)? (Y/N)"
 
                     if ($confirm -match '^[Yy]$') {
                         foreach ($idx in $selectedIndexes) {
-                            [span_45](start_span)$selectedApp = $appList[[int]$idx - 1][span_45](end_span)
+                            $selectedApp = $appList[[int]$idx - 1]
                             Write-Host "`nUninstalling: $($selectedApp.DisplayName)" -ForegroundColor Magenta
-                            [span_46](start_span)$uninstallString = $selectedApp.UninstallString[span_46](end_span)
+                            $uninstallString = $selectedApp.UninstallString
                             Write-Host "Executing: $uninstallString" -ForegroundColor Cyan
                             try {
-                                [span_47](start_span)Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$uninstallString`"" -Wait -NoNewWindow[span_47](end_span)
-                                Write-Host "Uninstallation process finished/closed." -[span_48](start_span)ForegroundColor Green[span_48](end_span)
+                                Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$uninstallString`"" -Wait -NoNewWindow
+                                Write-Host "Uninstallation process finished/closed." -ForegroundColor Green
                             } catch {
-                                [span_49](start_span)Write-Error "Failed to launch uninstaller for $($selectedApp.DisplayName)."[span_49](end_span)
+                                Write-Error "Failed to launch uninstaller for $($selectedApp.DisplayName)."
                             }
                         }
                     } else {
-                        Write-Host "Uninstallation cancelled." -[span_50](start_span)ForegroundColor Yellow[span_50](end_span)
+                        Write-Host "Uninstallation cancelled." -ForegroundColor Yellow
                     }
                 } else {
-                    [span_51](start_span)Write-Warning "Invalid selection. Please enter numbers separated by commas, or 'A'."[span_51](end_span)
+                    Write-Warning "Invalid selection. Please enter numbers separated by commas, or 'A'."
                 }
             }
         }
 
         if ($flaggedApps.Count -gt 0) {
-            Write-Host "`nWARNING: Found apps matching the online blocklist!" -[span_52](start_span)ForegroundColor Red[span_52](end_span)
+            Write-Host "`nWARNING: Found apps matching the online blocklist!" -ForegroundColor Red
             Start-UninstallLoop -appList $flaggedApps -listName "Flagged AV/VPN/Bloatware"
         } else {
-            Write-Host "Clean! No known AV/VPN/Bloatware from the online blocklist were found." -[span_53](start_span)ForegroundColor Green[span_53](end_span)
+            Write-Host "Clean! No known AV/VPN/Bloatware from the online blocklist were found." -ForegroundColor Green
         }
 
         Write-Host ""
@@ -308,7 +308,7 @@ if ($selectedParts -contains 2) {
 
 # PART 3: HP Wolf Security Uninstaller (WMIC-Free Edition)
 if ($selectedParts -contains 3) {
-    [span_54](start_span)Write-Host "`n--- HP Wolf Security Uninstaller Section ---" -ForegroundColor Cyan[span_54](end_span)
+    Write-Host "`n--- HP Wolf Security Uninstaller Section ---" -ForegroundColor Cyan
     Write-Host "Attempting to uninstall HP Wolf Security components in required order..." -ForegroundColor Magenta
 
     $hpComponents = @(
@@ -321,48 +321,48 @@ if ($selectedParts -contains 3) {
         Write-Host "`nSearching for: $component..." -ForegroundColor Yellow
         $uninstalled = $false
 
-        [span_55](start_span)$pkg = Get-Package -Name $component -ErrorAction SilentlyContinue[span_55](end_span)
+        $pkg = Get-Package -Name $component -ErrorAction SilentlyContinue
         if ($pkg -and -not $uninstalled) {
-            [span_56](start_span)Write-Host "Found $($pkg.Name). Uninstalling via Get-Package..." -ForegroundColor Cyan[span_56](end_span)
+            Write-Host "Found $($pkg.Name). Uninstalling via Get-Package..." -ForegroundColor Cyan
             try {
                 $pkg | Uninstall-Package -Force -ErrorAction Stop
                 Write-Host "Finished processing $component." -ForegroundColor Green
                 $uninstalled = $true
             } catch {
-                [span_57](start_span)Write-Warning "Get-Package uninstall failed. Trying fallback..."[span_57](end_span)
+                Write-Warning "Get-Package uninstall failed. Trying fallback..."
             }
         }
 
         if (-not $uninstalled) {
             $cimPkg = Get-CimInstance -ClassName Win32_Product -Filter "Name = '$component'" -ErrorAction SilentlyContinue
             if ($cimPkg) {
-                [span_58](start_span)Write-Host "Found $($cimPkg.Name). Uninstalling via WMI/CIM..." -ForegroundColor Cyan[span_58](end_span)
+                Write-Host "Found $($cimPkg.Name). Uninstalling via WMI/CIM..." -ForegroundColor Cyan
                 try {
                     Invoke-CimMethod -InputObject $cimPkg -MethodName Uninstall | Out-Null
                     Write-Host "Finished processing $component." -ForegroundColor Green
                     $uninstalled = $true
-                [span_59](start_span)} catch {[span_59](end_span)
-                    [span_60](start_span)Write-Warning "CIM uninstall failed. Trying registry fallback..."[span_60](end_span)
+                } catch {
+                    Write-Warning "CIM uninstall failed. Trying registry fallback..."
                 }
             }
         }
 
         if (-not $uninstalled) {
             $regPath = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*")
-            $regApp = Get-ItemProperty $regPath -ErrorAction SilentlyContinue | [span_61](start_span)Where-Object { $_.DisplayName -eq $component }[span_61](end_span)
+            $regApp = Get-ItemProperty $regPath -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq $component }
             
             if ($regApp) {
                 $guid = $regApp.PSChildName
                 if ($guid -match "^\{.*\}$") {
-                    [span_62](start_span)Write-Host "Found Registry GUID ($guid). Uninstalling via msiexec..." -ForegroundColor Cyan[span_62](end_span)
+                    Write-Host "Found Registry GUID ($guid). Uninstalling via msiexec..." -ForegroundColor Cyan
                     try {
                         Start-Process -FilePath "msiexec.exe" -ArgumentList "/x `"$guid`" /qn /norestart" -Wait -NoNewWindow
                         Write-Host "Finished processing $component." -ForegroundColor Green
-                        [span_63](start_span)$uninstalled = $true[span_63](end_span)
+                        $uninstalled = $true
                      } catch {
                         Write-Error "Failed to execute msiexec for $component."
                     }
-                [span_64](start_span)}
+                }
             }
         }
         
@@ -371,7 +371,7 @@ if ($selectedParts -contains 3) {
         }
     }
     
-    Write-Host "`nHP Wolf Security uninstallation sequence complete. A reboot may be required." -ForegroundColor Yellow[span_64](end_span)
+    Write-Host "`nHP Wolf Security uninstallation sequence complete. A reboot may be required." -ForegroundColor Yellow
 }
 
 # PART 4: Trend Micro Custom Uninstaller (Web Download)
@@ -387,7 +387,7 @@ if ($selectedParts -contains 4) {
     $tmGithubAssetUrl = $null
 
     try {
-        [span_65](start_span)Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Yellow[span_65](end_span)
+        Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Yellow
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
         # Match your ZIP name logic from the image (TM.Uninstall.-.April.08.2026.zip)
         $tmAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)TM.*Uninstall.*\.zip" } | Select-Object -First 1
@@ -395,55 +395,55 @@ if ($selectedParts -contains 4) {
             $tmGithubAssetUrl = $tmAsset.browser_download_url
             $tmManualUrl = $latestRelease.html_url
             Write-Host "Found latest TM Uninstaller: $($tmAsset.name)" -ForegroundColor Green
-        [span_66](start_span)} else {[span_66](end_span)
+        } else {
             Write-Warning "Could not find a Trend Micro ZIP in the latest release assets."
         }
     } catch {
-        [span_67](start_span)Write-Warning "Failed to query GitHub API for latest release. Will attempt manual fallback."[span_67](end_span)
+        Write-Warning "Failed to query GitHub API for latest release. Will attempt manual fallback."
     }
     
     try {
         $tmTargetExeInfo = Get-ChildItem -Path $tmExtractPath -Filter $tmExeName -Recurse | Select-Object -First 1
 
         if ($tmTargetExeInfo) {
-            Write-Host "Existing Trend Micro extracted files found. Skipping download/extraction." -[span_68](start_span)ForegroundColor Green[span_68](end_span)
+            Write-Host "Existing Trend Micro extracted files found. Skipping download/extraction." -ForegroundColor Green
             $tmTargetExe = $tmTargetExeInfo.FullName
             Write-Host "Launching Trend Micro Uninstaller from $tmTargetExe..." -ForegroundColor Magenta
-            [span_69](start_span)Start-Process -FilePath $tmTargetExe -WorkingDirectory (Split-Path $tmTargetExe -Parent)[span_69](end_span)
+            Start-Process -FilePath $tmTargetExe -WorkingDirectory (Split-Path $tmTargetExe -Parent)
             Write-Host "`n[NOTICE] The Trend Micro Uninstaller has been launched in a separate window." -ForegroundColor Yellow
             Write-Host "The script will now continue without waiting." -ForegroundColor Green
         } else {
             Write-Host "Downloading Trend Micro package from GitHub Release..." -ForegroundColor Magenta
             $isZip = $false
-            [span_70](start_span)if (Test-Path $tmZipPath) {[span_70](end_span)
+            if (Test-Path $tmZipPath) {
                 if (Test-ZipFile -Path $tmZipPath) {
-                    Write-Host "Existing Trend Micro ZIP found at $tmZipPath. Skipping download." -[span_71](start_span)ForegroundColor Green[span_71](end_span)
+                    Write-Host "Existing Trend Micro ZIP found at $tmZipPath. Skipping download." -ForegroundColor Green
                     $isZip = $true
                 } else {
                     Remove-Item -Path $tmZipPath -Force -ErrorAction SilentlyContinue
                 }
             }
 
-            [span_72](start_span)if (-not $isZip -and $tmGithubAssetUrl) {[span_72](end_span)
+            if (-not $isZip -and $tmGithubAssetUrl) {
                 Invoke-WebRequest -Uri $tmGithubAssetUrl -OutFile $tmZipPath -UseBasicParsing -TimeoutSec 300 -Headers @{ "User-Agent" = "Mozilla/5.0" } -ErrorAction Stop
                 $isZip = Test-ZipFile -Path $tmZipPath
             }
 
             if (-not $isZip) {
-                [span_73](start_span)Start-Process $tmManualUrl[span_73](end_span)
+                Start-Process $tmManualUrl
                 Read-Host "Download the Trend Micro ZIP manually, then press Enter to continue"
                 $downloadedTmZip = Get-ChildItem -Path $baseDir -Filter "*TM*Uninstall*.zip" -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
                 if ($downloadedTmZip) { Copy-Item -Path $downloadedTmZip.FullName -Destination $tmZipPath -Force }
-            [span_74](start_span)}
+            }
 
             Expand-Archive -Path $tmZipPath -DestinationPath $tmExtractPath -Force
-            $tmTargetExeInfo = Get-ChildItem -Path $tmExtractPath -Filter $tmExeName -Recurse | Select-Object -First 1[span_74](end_span)
+            $tmTargetExeInfo = Get-ChildItem -Path $tmExtractPath -Filter $tmExeName -Recurse | Select-Object -First 1
             if ($tmTargetExeInfo) {
                 $tmTargetExe = $tmTargetExeInfo.FullName
                 Write-Host "Launching Trend Micro Uninstaller..." -ForegroundColor Magenta
-                [span_75](start_span)Start-Process -FilePath $tmTargetExe -WorkingDirectory (Split-Path $tmTargetExe -Parent)[span_75](end_span)
-                Write-Host "`n[NOTICE] The Trend Micro Uninstaller has been launched in a separate window." -[span_76](start_span)ForegroundColor Yellow[span_76](end_span)
-                Write-Host "The script will now continue without waiting." -[span_77](start_span)ForegroundColor Green[span_77](end_span)
+                Start-Process -FilePath $tmTargetExe -WorkingDirectory (Split-Path $tmTargetExe -Parent)
+                Write-Host "`n[NOTICE] The Trend Micro Uninstaller has been launched in a separate window." -ForegroundColor Yellow
+                Write-Host "The script will now continue without waiting." -ForegroundColor Green
             }
         }
     } catch { Write-Error "Trend Micro uninstaller failed: $_" }
@@ -458,32 +458,32 @@ if ($selectedParts -contains 5) {
     # Updated Repo and API links
     $repoApiUrl = "https://api.github.com/repos/Justine25-debug/putchoyauto/releases/latest"
     $csManualUrl = "https://github.com/Justine25-debug/putchoyauto/releases/latest"
-    [span_78](start_span)$csGithubAssetUrl = $null[span_78](end_span)
+    $csGithubAssetUrl = $null
 
     try {
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
         # Updated asset search to match: FalconSensor_Windows.zip
-        $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)FalconSensor.*\.zip" } | [span_79](start_span)Select-Object -First 1[span_79](end_span)
+        $csAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)FalconSensor.*\.zip" } | Select-Object -First 1
         if ($csAsset) { $csGithubAssetUrl = $csAsset.browser_download_url }
     } catch { }
 
     try {
         # Check if already extracted
-        $csTargetExeInfo = Get-ChildItem -Path $csExtractPath -Filter "*.exe" -Recurse | [span_80](start_span)Select-Object -First 1[span_80](end_span)
+        $csTargetExeInfo = Get-ChildItem -Path $csExtractPath -Filter "*.exe" -Recurse | Select-Object -First 1
         
         if (-not $csTargetExeInfo -and $csGithubAssetUrl) {
              Write-Host "Downloading CrowdStrike package..." -ForegroundColor Magenta
              Invoke-WebRequest -Uri $csGithubAssetUrl -OutFile $csZipPath -UseBasicParsing -TimeoutSec 180 -ErrorAction Stop
              Expand-Archive -Path $csZipPath -DestinationPath $csExtractPath -Force
-             $csTargetExeInfo = Get-ChildItem -Path $csExtractPath -Filter "*.exe" -Recurse | [span_81](start_span)Select-Object -First 1[span_81](end_span)
+             $csTargetExeInfo = Get-ChildItem -Path $csExtractPath -Filter "*.exe" -Recurse | Select-Object -First 1
         }
 
         if ($csTargetExeInfo) {
             $csTargetExe = $csTargetExeInfo.FullName
             Write-Host "Launching CrowdStrike Installer: $($csTargetExeInfo.Name)" -ForegroundColor Magenta
-            [span_82](start_span)[span_83](start_span)Start-Process -FilePath $csTargetExe -WorkingDirectory (Split-Path $csTargetExe -Parent) -Verb RunAs[span_82](end_span)[span_83](end_span)
-            Write-Host "`n[NOTICE] The CrowdStrike Installer has been launched in a separate window." -[span_84](start_span)[span_85](start_span)ForegroundColor Yellow[span_84](end_span)[span_85](end_span)
-            Write-Host "The script will now continue without waiting." -[span_86](start_span)[span_87](start_span)ForegroundColor Green[span_86](end_span)[span_87](end_span)
+            Start-Process -FilePath $csTargetExe -WorkingDirectory (Split-Path $csTargetExe -Parent) -Verb RunAs
+            Write-Host "`n[NOTICE] The CrowdStrike Installer has been launched in a separate window." -ForegroundColor Yellow
+            Write-Host "The script will now continue without waiting." -ForegroundColor Green
         }
     } catch { Write-Error "CrowdStrike installer failed: $_" }
 }
@@ -493,7 +493,7 @@ if ($selectedParts -contains 6) {
     Write-Host "`n--- Executing Admin Rename & User Creation ---" -ForegroundColor Cyan
 
     $CurrentAdminName = Read-Host "Enter the current local admin name to rename (Press Enter to default to 'CAO-2026')"
-    [span_88](start_span)if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }[span_88](end_span)
+    if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }
 
     $AdminName = "QCSYSADMIN"
     $UserName = "QCUSER"
@@ -504,7 +504,7 @@ if ($selectedParts -contains 6) {
         try {
             Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName 
             Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
-            [span_89](start_span)Write-Host " [SUCCESS] Admin Renamed." -ForegroundColor Green[span_89](end_span)
+            Write-Host " [SUCCESS] Admin Renamed." -ForegroundColor Green
         } catch { Write-Error "Rename Failed: $_" }
     }
 
@@ -512,7 +512,7 @@ if ($selectedParts -contains 6) {
         try {
             New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Created via Script"
             Add-LocalGroupMember -Group "Administrators" -Member $UserName
-            Write-Host " [SUCCESS] $UserName Created." -[span_90](start_span)ForegroundColor Green[span_90](end_span)
+            Write-Host " [SUCCESS] $UserName Created." -ForegroundColor Green
         } catch { Write-Error "User Creation Failed: $_" }
     }
 }
@@ -525,26 +525,26 @@ if ($selectedParts -contains 7) {
     
     if (![string]::IsNullOrWhiteSpace($domainName)) {
         $sysInfo = Get-CimInstance Win32_ComputerSystem
-        [span_91](start_span)if ($sysInfo.PartOfDomain -and ($sysInfo.Domain -eq $domainName)) {[span_91](end_span)
+        if ($sysInfo.PartOfDomain -and ($sysInfo.Domain -eq $domainName)) {
             Write-Host "This computer is already joined to $domainName." -ForegroundColor Yellow
         } else {
             Write-Host "Please enter domain administrator credentials for $domainName" -ForegroundColor Magenta
             $cred = Get-Credential
             try {
-                [span_92](start_span)Add-Computer -DomainName $domainName -Credential $cred -Force -ErrorAction Stop[span_92](end_span)
+                Add-Computer -DomainName $domainName -Credential $cred -Force -ErrorAction Stop
                 Write-Host "Successfully joined $domainName!" -ForegroundColor Green
                 Write-Host "A reboot is required to finalize the domain join." -ForegroundColor Magenta
             } catch {
                 Write-Host "Failed to join domain: $($_.Exception.Message)" -ForegroundColor Red
             }
-        [span_93](start_span)}
+        }
     } else {
         Write-Host "Skipping Domain Join." -ForegroundColor Yellow
     }
 }
 
     Write-Host "`n--- All Tasks Completed ---" -ForegroundColor Cyan
-    $runAgain = Read-Host "Return to task menu? (Y/N)"[span_93](end_span)
+    $runAgain = Read-Host "Return to task menu? (Y/N)"
     if ($runAgain -match '^[Yy]$') { Clear-Host; continue }
     break
 } while ($true)
