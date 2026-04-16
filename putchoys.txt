@@ -459,7 +459,7 @@ if ($selectedParts -contains 5) {
     $repoApiUrl = "https://api.github.com/repos/Justine25-debug/putchoyauto/releases/latest"
     $csGithubAssetUrl = $null
     $csCidFileName = "CrowdstrikeCustomerID.txt"
-    $csCidPath = Join-Path $baseDir $csCidFileName
+    $csCidUrl = "https://raw.githubusercontent.com/Justine25-debug/putchoyauto/refs/heads/main/CrowdstrikeCustomerID.txt"
     try {
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
         # Updated asset search to match: FalconSensor_Windows.zip
@@ -468,16 +468,14 @@ if ($selectedParts -contains 5) {
     } catch { }
 
     try {
-        if (Test-Path -LiteralPath $csCidPath) {
-            $csCidText = (Get-Content -LiteralPath $csCidPath -Raw -ErrorAction SilentlyContinue).Trim()
-            if ($csCidText) {
-                Write-Host "CrowdStrike Customer ID file content (from repository):" -ForegroundColor Cyan
-                Write-Host $csCidText -ForegroundColor Green
-            } else {
-                Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty."
-            }
+        Write-Host "Retrieving CrowdStrike customer ID file content from remote source..." -ForegroundColor Yellow
+        $csCidResponse = Invoke-WebRequest -Uri $csCidUrl -UseBasicParsing -TimeoutSec 60 -ErrorAction Stop
+        $csCidText = ($csCidResponse.Content | Out-String).Trim()
+        if ($csCidText) {
+            Write-Host "CrowdStrike Customer ID file content (remote):" -ForegroundColor Cyan
+            Write-Host $csCidText -ForegroundColor Green
         } else {
-            Write-Warning "CrowdStrike customer ID file '$csCidFileName' was not found in the repository path: $csCidPath. Please ensure '$csCidFileName' exists in the repository root directory."
+            Write-Warning "CrowdStrike customer ID file '$csCidFileName' is empty at remote source."
         }
 
         # Check if already extracted
