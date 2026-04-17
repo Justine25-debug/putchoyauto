@@ -507,7 +507,7 @@ if ($selectedParts -contains 6) {
     $AdminName = "QCSYSADMIN"
     $AdminPass = ConvertTo-SecureString "QCqmc*0819(" -AsPlainText -Force
 
-    $renameChoice = Read-Host "Rename an existing local admin to QCSYSADMIN? (Y/N, Enter defaults to No)"
+    $renameChoice = Read-Host "Rename an existing local admin to QCSYSADMIN? (Y to rename, any other input = No)"
     if ($renameChoice -match '^[Yy]$') {
         $CurrentAdminName = Read-Host "Enter the current local admin name to rename (Press Enter to default to 'CAO-2026')"
         if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }
@@ -516,6 +516,8 @@ if ($selectedParts -contains 6) {
             try {
                 if ($CurrentAdminName -ne $AdminName) {
                     Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName
+                } else {
+                    Write-Host "QCSYSADMIN is already the current admin name. Skipping rename step." -ForegroundColor Yellow
                 }
                 Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
                 try { Add-LocalGroupMember -Group "Administrators" -Member $AdminName -ErrorAction Stop } catch { }
