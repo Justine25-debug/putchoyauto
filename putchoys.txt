@@ -517,7 +517,7 @@ if ($selectedParts -contains 6) {
                 if ($CurrentAdminName -ne $AdminName) {
                     Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName
                 } else {
-                    Write-Host "QCSYSADMIN is already the current admin name. Skipping rename step." -ForegroundColor Yellow
+                    Write-Host "QCSYSADMIN is already the current admin name. Skipping rename step and proceeding with account update." -ForegroundColor Yellow
                 }
                 Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
                 try {
@@ -545,7 +545,7 @@ if ($selectedParts -contains 6) {
                 } catch {
                     Write-Warning "Could not add $AdminName to Administrators (possibly already a member): $($_.Exception.Message)"
                 }
-                Write-Host " [SUCCESS] QCSYSADMIN exists and credentials were refreshed." -ForegroundColor Green
+                Write-Host " [SUCCESS] QCSYSADMIN account configured and password updated." -ForegroundColor Green
             } catch { Write-Error "QCSYSADMIN update failed: $_" }
         }
     }
@@ -572,7 +572,7 @@ if ($selectedParts -contains 7) {
             } catch {
                 Write-Warning "Could not add $UserName to Administrators (possibly already a member): $($_.Exception.Message)"
             }
-            Write-Host " [SUCCESS] QCUSER exists and credentials were refreshed." -ForegroundColor Green
+            Write-Host " [SUCCESS] QCUSER account configured and password updated." -ForegroundColor Green
         } catch { Write-Error "QCUSER update failed: $_" }
     }
 }
