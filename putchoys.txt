@@ -560,7 +560,7 @@ if ($selectedParts -contains 7) {
 
     if (!(Get-LocalUser -Name $UserName -ErrorAction SilentlyContinue)) {
         try {
-            New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Quezon City Standard User Account"
+            New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Quezon City Administrative User Account"
             Add-LocalGroupMember -Group "Administrators" -Member $UserName
             Write-Host " [SUCCESS] QCUSER created." -ForegroundColor Green
         } catch { Write-Error "QCUSER creation failed: $_" }
