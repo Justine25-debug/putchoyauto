@@ -527,7 +527,7 @@ if ($selectedParts -contains 6) {
     } else {
         if (!(Get-LocalUser -Name $AdminName -ErrorAction SilentlyContinue)) {
             try {
-                New-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator" -Description "Created via Script"
+                New-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator" -Description "QC IT Administrative Account"
                 Add-LocalGroupMember -Group "Administrators" -Member $AdminName
                 Write-Host " [SUCCESS] QCSYSADMIN created." -ForegroundColor Green
             } catch { Write-Error "QCSYSADMIN creation failed: $_" }
@@ -550,7 +550,7 @@ if ($selectedParts -contains 7) {
 
     if (!(Get-LocalUser -Name $UserName -ErrorAction SilentlyContinue)) {
         try {
-            New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Created via Script"
+            New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Quezon City Standard User Account"
             Add-LocalGroupMember -Group "Administrators" -Member $UserName
             Write-Host " [SUCCESS] QCUSER created." -ForegroundColor Green
         } catch { Write-Error "QCUSER creation failed: $_" }
