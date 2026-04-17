@@ -509,7 +509,7 @@ if ($selectedParts -contains 6) {
     $AdminPass = ConvertTo-SecureString "QCqmc*0819(" -AsPlainText -Force
     $UserPass = ConvertTo-SecureString "saqclahatpanalo" -AsPlainText -Force
 
-    $createAdminAccount = {
+    $CreateAdminAccountBlock = {
         if (!(Get-LocalUser -Name $AdminName -ErrorAction SilentlyContinue)) {
             try {
                 New-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator" -Description "Created via Script"
@@ -521,7 +521,7 @@ if ($selectedParts -contains 6) {
         }
     }
 
-    $createUserAccount = {
+    $CreateUserAccountBlock = {
         if (!(Get-LocalUser -Name $UserName -ErrorAction SilentlyContinue)) {
             try {
                 New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Created via Script"
@@ -552,15 +552,15 @@ if ($selectedParts -contains 6) {
             Write-Host " $CurrentAdminName not found. Skipping rename." -ForegroundColor Yellow
         }
 
-        & $createUserAccount
+        & $CreateUserAccountBlock
     } elseif ($accountAction -eq '2') {
-        & $createAdminAccount
+        & $CreateAdminAccountBlock
     } elseif ($accountAction -eq '3') {
-        & $createUserAccount
+        & $CreateUserAccountBlock
     } elseif ([string]::IsNullOrWhiteSpace($accountAction)) {
         Write-Host "Skipping account creation changes." -ForegroundColor Yellow
     } else {
-        Write-Host "Invalid selection. Please choose 1, 2, or 3." -ForegroundColor Yellow
+        Write-Host "Invalid selection. Please choose 1, 2, 3, or press Enter to skip." -ForegroundColor Yellow
     }
 
 }
