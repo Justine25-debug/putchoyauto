@@ -569,7 +569,7 @@ if ($selectedParts -contains 6) {
 if ($selectedParts -contains 7) {
     Write-Host "`n--- Domain Configuration ---" -ForegroundColor Cyan
     
-    $domainName = Read-Host "Enter the Domain to join (e.g., quezoncity.gov.ph) or press Enter to skip"
+    $domainName = Read-Host "Enter the Domain to join (e.g., QUEZONCITYLGU.gov) or press Enter to skip"
     
     if (![string]::IsNullOrWhiteSpace($domainName)) {
         $sysInfo = Get-CimInstance Win32_ComputerSystem
