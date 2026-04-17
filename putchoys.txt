@@ -517,7 +517,7 @@ if ($selectedParts -contains 6) {
                 if ($CurrentAdminName -ne $AdminName) {
                     Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName
                 } else {
-                    Write-Host "QCSYSADMIN already has that name. Skipping rename and updating password/full name." -ForegroundColor Yellow
+                    Write-Host "QCSYSADMIN already has that name. Skipping rename, updating password and full name." -ForegroundColor Yellow
                 }
                 Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
                 try {
@@ -528,7 +528,7 @@ if ($selectedParts -contains 6) {
                 Write-Host " [SUCCESS] QCSYSADMIN configured via rename flow." -ForegroundColor Green
             } catch { Write-Error "QCSYSADMIN rename flow failed: $_" }
         } else {
-            Write-Warning "Cannot rename: user '$CurrentAdminName' was not found. QCSYSADMIN was not configured via rename. Re-run and choose create/update if needed."
+            Write-Warning "User '$CurrentAdminName' not found. QCSYSADMIN was not configured via rename. Re-run and choose create/update if needed."
         }
     } else {
         if (!(Get-LocalUser -Name $AdminName -ErrorAction SilentlyContinue)) {
