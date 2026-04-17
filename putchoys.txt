@@ -517,7 +517,7 @@ if ($selectedParts -contains 6) {
                 if ($CurrentAdminName -ne $AdminName) {
                     Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName
                 } else {
-                    Write-Host "QCSYSADMIN already has that name. Skipping rename, updating password and full name." -ForegroundColor Yellow
+                    Write-Host "Current admin name already matches QCSYSADMIN. Skipping rename, updating password and full name." -ForegroundColor Yellow
                 }
                 Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
                 try {
