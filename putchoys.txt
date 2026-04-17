@@ -97,7 +97,7 @@ do {
     Write-Host "[3] HP Wolf Security Uninstaller"
     Write-Host "[4] Trend Micro Uninstaller"
     Write-Host "[5] CrowdStrike Falcon Installer"
-    Write-Host "[6] Admin Rename & User Creation"
+    Write-Host "[6] QCSYSADMIN | QCUSER Account Creation"
     Write-Host "[7] Join to Domain"
     Write-Host "[A] Run All"
     Write-Host "[Q] Quit"
@@ -500,33 +500,67 @@ if ($selectedParts -contains 5) {
     } catch { Write-Error "CrowdStrike installer failed: $_" }
 }
 
-# PART 6: Admin Rename & User Creation
+# PART 6: QCSYSADMIN | QCUSER Account Creation
 if ($selectedParts -contains 6) {
-    Write-Host "`n--- Executing Admin Rename & User Creation ---" -ForegroundColor Cyan
-
-    $CurrentAdminName = Read-Host "Enter the current local admin name to rename (Press Enter to default to 'CAO-2026')"
-    if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }
+    Write-Host "`n--- QCSYSADMIN | QCUSER Account Creation ---" -ForegroundColor Cyan
 
     $AdminName = "QCSYSADMIN"
     $UserName = "QCUSER"
     $AdminPass = ConvertTo-SecureString "QCqmc*0819(" -AsPlainText -Force
     $UserPass = ConvertTo-SecureString "saqclahatpanalo" -AsPlainText -Force
 
-    if (Get-LocalUser -Name $CurrentAdminName -ErrorAction SilentlyContinue) {
-        try {
-            Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName 
-            Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
-            Write-Host " [SUCCESS] Admin Renamed." -ForegroundColor Green
-        } catch { Write-Error "Rename Failed: $_" }
+    $createAdminAccount = {
+        if (!(Get-LocalUser -Name $AdminName -ErrorAction SilentlyContinue)) {
+            try {
+                New-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator" -Description "Created via Script"
+                Add-LocalGroupMember -Group "Administrators" -Member $AdminName
+                Write-Host " [SUCCESS] $AdminName Created." -ForegroundColor Green
+            } catch { Write-Error "Admin Creation Failed: $_" }
+        } else {
+            Write-Host " $AdminName already exists. Skipping creation." -ForegroundColor Yellow
+        }
     }
 
-    if (!(Get-LocalUser -Name $UserName -ErrorAction SilentlyContinue)) {
-        try {
-            New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Created via Script"
-            Add-LocalGroupMember -Group "Administrators" -Member $UserName
-            Write-Host " [SUCCESS] $UserName Created." -ForegroundColor Green
-        } catch { Write-Error "User Creation Failed: $_" }
+    $createQcUserAccount = {
+        if (!(Get-LocalUser -Name $UserName -ErrorAction SilentlyContinue)) {
+            try {
+                New-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User" -Description "Created via Script"
+                Add-LocalGroupMember -Group "Administrators" -Member $UserName
+                Write-Host " [SUCCESS] $UserName Created." -ForegroundColor Green
+            } catch { Write-Error "User Creation Failed: $_" }
+        } else {
+            Write-Host " $UserName already exists. Skipping creation." -ForegroundColor Yellow
+        }
     }
+
+    Write-Host "[1] Rename current local account to QCSYSADMIN and add QCUSER"
+    Write-Host "[2] Add QCSYSADMIN"
+    Write-Host "[3] Add QCUSER"
+    $accountAction = Read-Host "Select account action (1/2/3) or press Enter to skip"
+
+    if ($accountAction -eq '1') {
+        $CurrentAdminName = Read-Host "Enter the current local admin name to rename (Press Enter to default to 'CAO-2026')"
+        if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }
+
+        if (Get-LocalUser -Name $CurrentAdminName -ErrorAction SilentlyContinue) {
+            try {
+                Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName 
+                Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
+                Write-Host " [SUCCESS] Admin Renamed." -ForegroundColor Green
+            } catch { Write-Error "Rename Failed: $_" }
+        } else {
+            Write-Host " $CurrentAdminName not found. Skipping rename." -ForegroundColor Yellow
+        }
+
+        & $createQcUserAccount
+    } elseif ($accountAction -eq '2') {
+        & $createAdminAccount
+    } elseif ($accountAction -eq '3') {
+        & $createQcUserAccount
+    } else {
+        Write-Host "Skipping account creation changes." -ForegroundColor Yellow
+    }
+
 }
 
 # PART 7: Join to Domain
