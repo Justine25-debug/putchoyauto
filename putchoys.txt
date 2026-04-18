@@ -99,23 +99,18 @@ do {
     Write-Host "[5] CrowdStrike Falcon Installer"
     Write-Host "[6] QCSYSADMIN | QCUSER Account Creation"
     Write-Host "[7] Join to Domain"
-    Write-Host "[A] Run All"
     Write-Host "[Q] Quit"
 
-    $selectionInput = Read-Host "Select task numbers (comma-separated), A for all, or Q to quit"
+    $selectionInput = Read-Host "Select task numbers (comma-separated), or Q to quit"
     if ($selectionInput -match '^[Qq]$') { break }
 
     $selectedParts = @()
 
-    if ($selectionInput -match '^[Aa]$') {
-        $selectedParts = 1..7
-    } else {
-        $selectedParts = $selectionInput -split ',' |
-            ForEach-Object { $_.Trim() } |
-            Where-Object { $_ -match '^[1-7]$' } |
-            ForEach-Object { [int]$_ } |
-            Select-Object -Unique
-    }
+    $selectedParts = $selectionInput -split ',' |
+        ForEach-Object { $_.Trim() } |
+        Where-Object { $_ -match '^[1-7]$' } |
+        ForEach-Object { [int]$_ } |
+        Select-Object -Unique
 
     if (-not $selectedParts -or $selectedParts.Count -eq 0) {
         Write-Host "No valid tasks selected. Please try again." -ForegroundColor Yellow
