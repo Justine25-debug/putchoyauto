@@ -53,6 +53,11 @@ Write-Host "Using base directory at: $baseDir" -ForegroundColor Green
 do {
     $currentHostName = $env:COMPUTERNAME
     $currentUserName = $env:USERNAME
+    $serialNumber = Get-CimInstance -ClassName Win32_BIOS -ErrorAction SilentlyContinue |
+        Select-Object -ExpandProperty SerialNumber -ErrorAction SilentlyContinue
+    if ([string]::IsNullOrWhiteSpace($serialNumber)) {
+        $serialNumber = "Not Found"
+    }
 
     # --- Fetch Active MAC Address(es) ---
     $activeMacs = (Get-NetAdapter -ErrorAction SilentlyContinue |
@@ -78,6 +83,7 @@ do {
     Write-Host "===============================================" -ForegroundColor Gray
     Write-Host " Hostname    : " -NoNewline; Write-Host $currentHostName -ForegroundColor White
     Write-Host " User Name   : " -NoNewline; Write-Host $currentUserName -ForegroundColor White
+    Write-Host " Serial No.  : " -NoNewline; Write-Host $serialNumber -ForegroundColor White
     Write-Host " MAC Address : " -NoNewline; Write-Host $activeMacs -ForegroundColor White
     Write-Host " Trend Micro : " -NoNewline; Write-Host $tmStatus -ForegroundColor $tmColor
     Write-Host " CrowdStrike : " -NoNewline; Write-Host $csStatus -ForegroundColor $csColor
