@@ -54,7 +54,7 @@ do {
     $currentHostName = $env:COMPUTERNAME
     $currentUserName = $env:USERNAME
     $serialNumber = Get-CimInstance -ClassName Win32_BIOS -ErrorAction SilentlyContinue |
-        Select-Object -ExpandProperty SerialNumber -ErrorAction SilentlyContinue
+        Select-Object -ExpandProperty SerialNumber
     if ([string]::IsNullOrWhiteSpace($serialNumber)) {
         $serialNumber = "Not Found"
     }
