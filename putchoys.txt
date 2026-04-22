@@ -525,34 +525,63 @@ if ($selectedParts -contains 6) {
         }
     }
 
-    Write-Host "[1] Rename current local account to QCSYSADMIN and add QCUSER"
-    Write-Host "[2] Add QCSYSADMIN"
-    Write-Host "[3] Add QCUSER"
-    $accountAction = Read-Host "Select account action (1/2/3) or press Enter to skip"
-
-    if ($accountAction -eq '1') {
+    $RenameToAdminAccountBlock = {
         $CurrentAdminName = Read-Host "Enter the current local admin name to rename (Press Enter to default to 'CAO-2026')"
         if ([string]::IsNullOrWhiteSpace($CurrentAdminName)) { $CurrentAdminName = "CAO-2026" }
 
         if (Get-LocalUser -Name $CurrentAdminName -ErrorAction SilentlyContinue) {
             try {
-                Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName 
+                Rename-LocalUser -Name $CurrentAdminName -NewName $AdminName
                 Set-LocalUser -Name $AdminName -Password $AdminPass -FullName "QC IT Administrator"
-                Write-Host " [SUCCESS] Admin Renamed." -ForegroundColor Green
+                Write-Host " [SUCCESS] Renamed to $AdminName." -ForegroundColor Green
             } catch { Write-Error "Rename Failed: $_" }
         } else {
             Write-Host " $CurrentAdminName not found. Skipping rename." -ForegroundColor Yellow
         }
+    }
 
+    $RenameToUserAccountBlock = {
+        $CurrentUserToRename = Read-Host "Enter the current local user name to rename to $UserName"
+
+        if ([string]::IsNullOrWhiteSpace($CurrentUserToRename)) {
+            Write-Host "No user entered. Skipping rename." -ForegroundColor Yellow
+            return
+        }
+
+        if (Get-LocalUser -Name $CurrentUserToRename -ErrorAction SilentlyContinue) {
+            try {
+                Rename-LocalUser -Name $CurrentUserToRename -NewName $UserName
+                Set-LocalUser -Name $UserName -Password $UserPass -FullName "Quezon City User"
+                Add-LocalGroupMember -Group "Administrators" -Member $UserName -ErrorAction SilentlyContinue
+                Write-Host " [SUCCESS] Renamed to $UserName." -ForegroundColor Green
+            } catch { Write-Error "Rename Failed: $_" }
+        } else {
+            Write-Host " $CurrentUserToRename not found. Skipping rename." -ForegroundColor Yellow
+        }
+    }
+
+    Write-Host "[1] Rename current local account to QCSYSADMIN and add QCUSER"
+    Write-Host "[2] Add QCSYSADMIN"
+    Write-Host "[3] Add QCUSER"
+    Write-Host "[4] Rename current user to QCSYSADMIN"
+    Write-Host "[5] Rename current user to QCUSER"
+    $accountAction = Read-Host "Select account action (1/2/3/4/5) or press Enter to skip"
+
+    if ($accountAction -eq '1') {
+        & $RenameToAdminAccountBlock
         & $CreateUserAccountBlock
     } elseif ($accountAction -eq '2') {
         & $CreateAdminAccountBlock
     } elseif ($accountAction -eq '3') {
         & $CreateUserAccountBlock
+    } elseif ($accountAction -eq '4') {
+        & $RenameToAdminAccountBlock
+    } elseif ($accountAction -eq '5') {
+        & $RenameToUserAccountBlock
     } elseif ([string]::IsNullOrWhiteSpace($accountAction)) {
         Write-Host "Skipping account creation changes." -ForegroundColor Yellow
     } else {
-        Write-Host "Invalid selection. Please choose 1, 2, 3, or press Enter to skip." -ForegroundColor Yellow
+        Write-Host "Invalid selection. Please choose 1, 2, 3, 4, or 5, or press Enter to skip." -ForegroundColor Yellow
     }
 
 }
