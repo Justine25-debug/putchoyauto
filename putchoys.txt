@@ -382,7 +382,7 @@ if ($selectedParts -contains 4) {
         Write-Host "Fetching latest release information from GitHub..." -ForegroundColor Yellow
         $latestRelease = Invoke-RestMethod -Uri $repoApiUrl -UseBasicParsing -ErrorAction Stop
         # Match ZIP name based on tm.uninstall (date/version agnostic)
-        $tmAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^tm\.uninstall(?:\..*)?\.zip$" } | Select-Object -First 1
+        $tmAsset = $latestRelease.assets | Where-Object { $_.name -match "(?i)^tm\.uninstall.*\.zip$" } | Select-Object -First 1
         if ($tmAsset) {
             $tmGithubAssetUrl = $tmAsset.browser_download_url
             $tmManualUrl = $latestRelease.html_url
@@ -424,7 +424,7 @@ if ($selectedParts -contains 4) {
             if (-not $isZip) {
                 Start-Process $tmManualUrl
                 Read-Host "Download the Trend Micro ZIP manually, then press Enter to continue"
-                $downloadedTmZip = Get-ChildItem -Path $baseDir -File | Where-Object { $_.Name -match "(?i)^tm\.uninstall(?:\..*)?\.zip$" } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+                $downloadedTmZip = Get-ChildItem -Path $baseDir -File | Where-Object { $_.Name -match "(?i)^tm\.uninstall.*\.zip$" } | Sort-Object LastWriteTime -Descending | Select-Object -First 1
                 if ($downloadedTmZip) { Copy-Item -Path $downloadedTmZip.FullName -Destination $tmZipPath -Force }
             }
 
